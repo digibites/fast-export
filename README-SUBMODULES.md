@@ -25,6 +25,16 @@ format for this file is:
 The path of this mapping file is then provided with the --subrepo-map
 command line option.
 
+After conversion, the subrepo URL is set to the relative path specified
+in the mapping file by default. This works because Git resolves relative
+subrepo URLs with respect to the parent repo URL. If you wish for the
+parent repo to use different URLs to refer to its subrepos, you can use
+the ``--subrepo-urlmap`` option to specify a second mapping file. This
+file specifies a mapping from old to new subrepo URLs:
+
+    "https://old.hg.host/path/to/repo"="ssh://git@new.git.host/new/repo/path"
+    ...
+
 ## Example
 
 Example mercurial repo folder structure (~/mercurial):

@@ -34,6 +34,7 @@ cfg_export_boundary=1000
 
 subrepo_cache={}
 submodule_mappings=None
+subrepo_urlmap={}
 
 # True if fast export should automatically try to sanitize
 # author/branch/tag names.
@@ -154,7 +155,8 @@ def refresh_git_submodule(name,subrepo_info):
   stderr_buffer.write(
     b"Adding/updating submodule %s, revision %s\n" % (name, subrepo_info[1])
   )
-  return b'[submodule "%s"]\n\tpath = %s\n\turl = %s\n' % (name, name, subrepo_info[0])
+  return b'[submodule "%s"]\n\tpath = %s\n\turl = %s\n' % (name, name,
+    subrepo_urlmap.get(subrepo_info[0], subrepo_info[0]))
 
 def refresh_hg_submodule(name,subrepo_info):
   gitRepoLocation=submodule_mappings[name] + b"/.git"
@@ -176,7 +178,7 @@ def refresh_hg_submodule(name,subrepo_info):
       % (name, subrepo_hash, gitSha)
     )
     return b'[submodule "%s"]\n\tpath = %s\n\turl = %s\n' % (name,name,
-      submodule_mappings[name])
+      subrepo_urlmap.get(subrepo_info[0], submodule_mappings[name]))
   else:
     stderr_buffer.write(
       b"Warning: Could not find hg revision %s for %s in git %s\n"
@@ -639,6 +641,8 @@ if __name__=='__main__':
       help="Add a plugin with the given init string <name=init>")
   parser.add_option("--subrepo-map", type="string", dest="subrepo_map",
       help="Provide a mapping file between the subrepository name and the submodule name")
+  parser.add_option("--subrepo-urlmap", type="string", dest="subrepo_urlmap",
+      help="Provide a mapping file to map existing subrepo urls to new subrepo urls")
 
   (options,args)=parser.parse_args()
 
@@ -659,6 +663,14 @@ if __name__=='__main__':
         sys.exit(1)
       submodule_mappings=load_mapping('subrepo mappings',
                                       options.subrepo_map,False)
+
+  if options.subrepo_urlmap:
+      if not os.path.exists(options.subrepo_urlmap):
+        sys.stderr.write('Subrepo URL mapping file not found %s\n'
+                         % options.subrepo_urlmap)
+        sys.exit(1)
+      subrepo_urlmap=load_mapping('subrepo url mappings',
+                                  options.subrepo_urlmap,False)
 
   a={}
   if options.authorfile!=None:
